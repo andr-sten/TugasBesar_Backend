@@ -12,10 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Nonaktifkan CSRF untuk semua route API (Flutter mobile app)
-        // statefulApi() TIDAK dipakai - itu untuk SPA bukan mobile app
-        $middleware->validateCsrfTokens(except: [
-            'api/*',
+        // Hapus CSRF sepenuhnya dari API middleware group
+        // Flutter mobile & web menggunakan Bearer token, bukan session/cookie
+        // Web routes (/login, /dashboard) TETAP terlindungi CSRF seperti biasa
+        $middleware->removeFromApi([
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
