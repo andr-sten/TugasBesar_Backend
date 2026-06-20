@@ -12,7 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Nonaktifkan CSRF untuk semua route API (Flutter mobile app)
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+            'api/login',
+            'api/register',
+        ]);
+
+        // Tambahkan header CORS untuk mobile app (opsional tapi direkomendasikan)
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
