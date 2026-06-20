@@ -12,12 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Hapus CSRF sepenuhnya dari API middleware group
-        // Flutter mobile & web menggunakan Bearer token, bukan session/cookie
-        // Web routes (/login, /dashboard) TETAP terlindungi CSRF seperti biasa
-        $middleware->removeFromGroup('api', [
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
-        ]);
+        //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
