@@ -12,9 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // MENGECUALIKAN SEMUA ROUTE API DARI CSRF TOKEN (PENCEGAHAN ERROR 419 DI VERCEL)
+        // MENGECUALIKAN ROUTE DARI CSRF TOKEN (PENCEGAHAN ERROR 419 DI VERCEL SERVERLESS)
+        // Vercel serverless = stateless, CSRF token tidak reliable
         $middleware->validateCsrfTokens(except: [
             'api/*',
+            'login',
+            'register',
+            'logout',
+            '*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
