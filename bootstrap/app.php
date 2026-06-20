@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Hapus CSRF sepenuhnya dari API middleware group
         // Flutter mobile & web menggunakan Bearer token, bukan session/cookie
         // Web routes (/login, /dashboard) TETAP terlindungi CSRF seperti biasa
-        $middleware->removeFromApi([
+        $middleware->removeFromGroup('api', [
             \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
         ]);
     })
