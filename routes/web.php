@@ -1,33 +1,34 @@
 <?php
 
-use App\Http\Controllers\FrontEndController;
-use App\Http\Controllers\CustomAuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [FrontEndController::class, 'index'])->name('home');
+Route::get('/', [DashboardController::class, 'index'])->name('home');
 
 // Auth Routes
-Route::get('/login', [CustomAuthController::class, 'showLogin'])->name('login')->middleware('guest');
-Route::post('/login', [CustomAuthController::class, 'login'])->middleware('guest');
-Route::get('/register', [CustomAuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [CustomAuthController::class, 'register']);
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 
-Route::post('/logout', [CustomAuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [FrontEndController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     
     // Mahasiswa Routes
-    Route::get('/semua-layanan', [FrontEndController::class, 'pilihLayanan'])->name('mahasiswa.layanan.index');
+    Route::get('/semua-layanan', [DashboardController::class, 'pilihLayanan'])->name('mahasiswa.layanan.index');
     Route::get('/antrian/status-aktif', [\App\Http\Controllers\AntrianController::class, 'checkStatus'])->name('antrian.checkStatus');
     Route::post('/antrian', [\App\Http\Controllers\AntrianController::class, 'store'])->name('antrian.store');
     Route::post('/antrian/{antrian}/batal', [\App\Http\Controllers\AntrianController::class, 'batal'])->name('antrian.batal');
-    Route::get('/mahasiswa/scan', [FrontEndController::class, 'scanQr'])->name('mahasiswa.scan');
+    Route::get('/mahasiswa/scan', [DashboardController::class, 'scanQr'])->name('mahasiswa.scan');
+    Route::get('/mahasiswa/riwayat', [DashboardController::class, 'riwayat'])->name('mahasiswa.riwayat');
     
     // Admin Routes
     Route::middleware('can:admin')->group(function () {
-        Route::get('/admin/antrian', [FrontEndController::class, 'manajemenAntrian'])->name('admin.antrian');
+        Route::get('/admin/antrian', [DashboardController::class, 'manajemenAntrian'])->name('admin.antrian');
         Route::post('/admin/antrian/reset', [\App\Http\Controllers\AntrianController::class, 'reset'])->name('admin.antrian.reset');
         Route::post('/admin/antrian/{antrian}/status', [\App\Http\Controllers\AntrianController::class, 'updateStatus'])->name('admin.antrian.updateStatus');
 

@@ -25,14 +25,16 @@ class AntrianController extends Controller
             ->first();
 
         if ($exists) {
-            return back()->with('error', 'Anda sudah memiliki antrian aktif di jadwal ini.');
+            session()->put('persistent_error', 'Anda sudah memiliki antrian aktif di jadwal ini.');
+            return back();
         }
 
         $jadwal = Jadwal::findOrFail($request->jadwal_id);
         $count = Antrian::where('jadwal_id', $request->jadwal_id)->where('status', '!=', 'batal')->count();
 
         if ($count >= $jadwal->kuota) {
-            return back()->with('error', 'Kuota antrian untuk jadwal ini sudah penuh.');
+            session()->put('persistent_error', 'Kuota antrian untuk jadwal ini sudah penuh.');
+            return back();
         }
 
         $lastNomor = Antrian::where('jadwal_id', $request->jadwal_id)->max('nomor') ?? 0;
@@ -45,7 +47,8 @@ class AntrianController extends Controller
             'status' => 'menunggu'
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Antrian berhasil diambil.');
+        session()->put('persistent_success', 'Antrian berhasil diambil.');
+        return redirect()->route('dashboard');
     }
 
     public function checkStatus()
@@ -70,7 +73,8 @@ class AntrianController extends Controller
 
         Antrian::truncate(); // Menghapus semua data dan me-reset ID/Auto Increment
 
-        return back()->with('success', 'Seluruh antrian telah dibersihkan.');
+        session()->put('persistent_success', 'Seluruh antrian telah dibersihkan.');
+        return back();
     }
 
     public function updateStatus(Request $request, Antrian $antrian)
@@ -97,14 +101,15 @@ class AntrianController extends Controller
         $antrian->update($updateData);
 
         if ($request->status === 'dipanggil') {
-            return back()->with([
-                'success' => 'Status antrian berhasil diperbarui.',
-                'panggil_nomor' => $antrian->nomor,
-                'panggil_loket' => $updateData['nomor_meja']
-            ]);
+            session()->put('persistent_success', 'Status antrian berhasil diperbarui.');
+            session()->put('persistent_panggil_id', $antrian->id);
+            session()->put('persistent_panggil_nomor', $antrian->nomor);
+            session()->put('persistent_panggil_loket', $updateData['nomor_meja']);
+            return back();
         }
 
-        return back()->with('success', 'Status antrian berhasil diperbarui.');
+        session()->put('persistent_success', 'Status antrian berhasil diperbarui.');
+        return back();
     }
 
     public function batal(Antrian $antrian)
@@ -115,6 +120,7 @@ class AntrianController extends Controller
 
         $antrian->update(['status' => 'batal']);
 
-        return back()->with('success', 'Antrian berhasil dibatalkan.');
+        session()->put('persistent_success', 'Antrian berhasil dibatalkan.');
+        return back();
     }
 }

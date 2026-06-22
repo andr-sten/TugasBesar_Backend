@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 
-class CustomAuthController extends Controller
+class AuthController extends Controller
 {
     public function showLogin()
     {
-        return view('auth.login-custom');
+        return view('auth.login');
     }
 
     public function login(Request $request)
@@ -38,7 +38,7 @@ class CustomAuthController extends Controller
         if (Auth::check() && Auth::user()->role !== 'admin') {
             return redirect()->route('dashboard');
         }
-        return view('auth.register-custom');
+        return view('auth.register');
     }
 
     public function register(Request $request)

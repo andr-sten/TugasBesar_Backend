@@ -1,4 +1,4 @@
-@extends('layouts.custom')
+@extends('layouts.template')
 
 @section('title', 'Dashboard - Campus Queue')
 
@@ -28,20 +28,6 @@
             <div class="hidden md:block">
                 <span class="px-4 py-2 bg-primary text-on-primary rounded-full text-xs font-bold uppercase tracking-wider">Sedang Dipanggil</span>
             </div>
-        </div>
-        @endif
-
-        @if(session('success'))
-        <div class="mb-6 p-4 bg-emerald-100 text-emerald-800 rounded-xl font-bold border border-emerald-200 flex items-center gap-3">
-            <span class="material-symbols-outlined">check_circle</span>
-            {{ session('success') }}
-        </div>
-        @endif
-
-        @if(session('error'))
-        <div class="mb-6 p-4 bg-error-container text-on-error-container rounded-xl font-bold border border-error/20 flex items-center gap-3">
-            <span class="material-symbols-outlined">error</span>
-            {{ session('error') }}
         </div>
         @endif
 
@@ -95,9 +81,9 @@
                                 <span class="material-symbols-outlined">qr_code_2</span>
                                 Tampilkan QR Code
                             </button>
-                            <form action="{{ route('antrian.batal', $antrianAktif) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan antrian ini?')">
+                            <form id="form-batal-{{$antrianAktif->id}}" action="{{ route('antrian.batal', $antrianAktif) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="px-6 py-4 bg-error-container text-on-error-container rounded-xl font-bold hover:bg-error/10 transition-all active:scale-[0.98]">
+                                <button type="button" @click="openConfirm('form-batal-{{$antrianAktif->id}}', 'Apakah Anda yakin ingin membatalkan antrian ini?')" class="px-6 py-4 bg-error-container text-on-error-container dark:bg-red-900/50 dark:text-red-200 rounded-xl font-bold hover:bg-error/10 dark:hover:bg-red-900/80 transition-all active:scale-[0.98]">
                                     <span class="material-symbols-outlined">close</span>
                                 </button>
                             </form>
@@ -158,9 +144,7 @@
                     <div class="flex flex-col gap-4">
                         @forelse($riwayats as $riwayat)
                         <div class="flex items-center gap-4 p-3 rounded-2xl hover:bg-surface-container-low transition-colors">
-                            <div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant">
-                                <span class="material-symbols-outlined">history</span>
-                            </div>
+                            <span class="material-symbols-outlined text-[32px] text-primary shrink-0">history</span>
                             <div class="flex-grow">
                                 <p class="font-bold text-on-surface text-body-md">{{ $riwayat->layanan->nama }}</p>
                                 <p class="text-label-sm text-on-surface-variant">{{ $riwayat->created_at->format('d M Y') }} • {{ ucfirst($riwayat->status) }}</p>
@@ -170,18 +154,18 @@
                         <p class="text-on-surface-variant text-sm text-center">Belum ada riwayat.</p>
                         @endforelse
                     </div>
-                    <button class="w-full py-3 border border-emerald-100 text-primary rounded-xl font-bold hover:bg-emerald-50 transition-colors font-body-md">
+                    <a href="{{ route('mahasiswa.riwayat') }}" class="block text-center w-full py-3 border border-emerald-100 dark:border-emerald-800 text-primary dark:text-emerald-400 rounded-xl font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors font-body-md shadow-sm">
                         Semua Riwayat
-                    </button>
+                    </a>
                 </div>
 
-                <div class="glass-card p-lg bg-emerald-900 overflow-hidden relative">
+                <div class="rounded-[24px] p-lg bg-emerald-900 overflow-hidden relative shadow-xl border border-emerald-800">
                     <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-primary opacity-20 rounded-full blur-2xl"></div>
                     <div class="relative z-10 text-white">
                         <span class="material-symbols-outlined text-[32px] mb-4" style="font-variation-settings: 'FILL' 1;">help</span>
-                        <h3 class="font-h2 text-h2 mb-2">Butuh Bantuan?</h3>
-                        <p class="text-white/70 text-body-md mb-6">Pusat bantuan kami siap menjawab pertanyaan seputar sistem antrian kampus.</p>
-                        <a class="inline-flex items-center gap-2 bg-white text-emerald-900 px-6 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-colors" href="#">
+                        <h3 class="font-h1 text-xl md:text-2xl mb-2 font-bold text-white">Butuh Bantuan?</h3>
+                        <p class="text-white/90 text-sm md:text-base font-medium mb-6">Pusat bantuan kami siap menjawab pertanyaan seputar sistem antrian kampus.</p>
+                        <a @click.prevent="showComingSoon = true" class="block text-center w-full py-3 bg-white dark:bg-transparent border border-transparent dark:border-emerald-800 text-emerald-900 dark:text-emerald-400 rounded-xl font-bold font-body-md hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors shadow-sm" href="#">
                             Tanya Support
                         </a>
                     </div>
@@ -388,38 +372,65 @@
                 icon: '/favicon.ico',
                 tag: 'antrian-panggilan'
             });
-            try {
-                new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
-            } catch (e) {}
         }
+        try {
+            new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
+        } catch (e) {}
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Request Notification Permission on load
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+        
         let lastStatus    = "{{ $antrianAktif ? $antrianAktif->status : 'none' }}";
         let lastUpdatedAt = "{{ $antrianAktif ? $antrianAktif->updated_at->toDateTimeString() : '' }}";
+        
+        window.isNavigating = false;
+        
+        // Prevent polling reload when a form is submitting
+        document.querySelectorAll('form').forEach(f => {
+            f.addEventListener('submit', () => { window.isNavigating = true; });
+        });
+        window.addEventListener('beforeunload', () => { window.isNavigating = true; });
 
         setInterval(function () {
+            if (window.isNavigating) return;
+            
             fetch("{{ route('antrian.checkStatus') }}")
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'dipanggil') {
                         if (lastStatus !== 'dipanggil' || (data.updated_at && data.updated_at !== lastUpdatedAt)) {
                             showNotification(data.nomor, data.nomor_meja);
-                            if (Notification.permission !== "granted") {
-                                alert("Panggilan: Nomor A-" + data.nomor + " ke " + (data.nomor_meja || 'Loket 1'));
-                            }
-                            if (lastStatus !== 'dipanggil') {
-                                setTimeout(() => window.location.reload(), 3000);
-                            }
+                            window.dispatchEvent(new CustomEvent('show-call', { detail: { nomor: data.nomor, loket: data.nomor_meja || 'Loket 1' } }));
                         }
                     }
                     if (data.status === 'none' && (lastStatus === 'menunggu' || lastStatus === 'dipanggil')) {
-                        window.location.reload();
+                        if (!window.isNavigating) window.location.reload();
                     }
-                    lastStatus    = data.status;
-                    lastUpdatedAt = data.updated_at;
-                });
+                    lastStatus = data.status;
+                    if (data.updated_at) lastUpdatedAt = data.updated_at;
+                })
+                .catch(err => console.error(err));
         }, 5000);
+
+        window.addEventListener('call-closed', () => {
+            sessionStorage.setItem('call_dismissed_timestamp', lastUpdatedAt);
+            window.location.reload();
+        });
+
+        if (lastStatus === 'dipanggil' && sessionStorage.getItem('call_dismissed_timestamp') !== lastUpdatedAt) {
+            setTimeout(function () {
+                window.dispatchEvent(new CustomEvent('show-call', { 
+                    detail: { 
+                        nomor: '{{ $antrianAktif ? $antrianAktif->nomor : "" }}', 
+                        loket: '{{ $antrianAktif ? ($antrianAktif->nomor_meja ?? "Loket 1") : "Loket 1" }}' 
+                    } 
+                }));
+            }, 500);
+        }
 
         {{-- =============================================
              QR CODE — menggunakan library qrcode (qrcode-generator)

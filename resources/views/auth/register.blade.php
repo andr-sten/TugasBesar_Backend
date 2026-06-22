@@ -1,4 +1,4 @@
-@extends('layouts.custom', [
+@extends('layouts.template', [
     'hideNav' => true, 
     'hideFooter' => true,
     'bodyClasses' => 'bg-background font-body-md text-on-background min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden'

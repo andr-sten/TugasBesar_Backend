@@ -1,4 +1,4 @@
-@extends('layouts.custom')
+@extends('layouts.template')
 
 @section('title', 'Tambah Layanan - Campus Queue')
 

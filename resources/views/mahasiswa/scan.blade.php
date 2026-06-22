@@ -1,4 +1,4 @@
-@extends('layouts.custom')
+@extends('layouts.template')
 
 @section('title', 'Scan QR Code - Campus Queue')
 
@@ -12,8 +12,7 @@
     <div id="scanner-container" class="w-full aspect-square max-w-md mx-auto rounded-2xl border-4 border-primary shadow-lg shadow-primary/20 relative">
         <div id="reader" class="w-full h-full"></div>
     </div>
-    <div id="scan-result" class="mt-4 text-emerald-700 font-bold"></div>
-    <button id="startButton" class="mt-8 px-8 py-4 bg-primary text-on-primary rounded-xl font-bold hover:brightness-110 transition-all shadow-lg">Mulai Pindai</button>
+    <div id="scan-result" class="mt-4 text-emerald-700 font-bold">Mempersiapkan kamera...</div>
 </main>
 @endsection
 
@@ -24,12 +23,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const readerElement = document.getElementById('reader');
-        const startButton = document.getElementById('startButton');
         const scanResultEl = document.getElementById('scan-result');
         let html5QrCode;
 
         const qrCodeSuccessCallback = (decodedText, decodedResult) => {
             scanResultEl.textContent = `Berhasil memindai... Mengalihkan...`;
+            scanResultEl.className = "mt-4 text-emerald-700 font-bold";
             try {
                 const data = JSON.parse(decodedText);
                 if (data.type === 'jadwal' && data.id) {
@@ -43,48 +42,37 @@
                     }
                 } else {
                     scanResultEl.textContent = 'QR Code tidak valid.';
+                    scanResultEl.className = "mt-4 text-red-600 font-bold";
                 }
             } catch (e) {
                 scanResultEl.textContent = 'Format QR Code salah.';
+                scanResultEl.className = "mt-4 text-red-600 font-bold";
             }
         };
 
-            // Dengan config dinamis proporsional:
-    const container = document.getElementById('scanner-container');
-    const size = Math.min(container.offsetWidth, container.offsetHeight);
-    const boxSize = Math.floor(size * 0.65); // 65% dari ukuran container
+        const container = document.getElementById('scanner-container');
+        const size = Math.min(container.offsetWidth, container.offsetHeight);
+        const boxSize = Math.floor(size * 0.65);
 
-    const config = { 
-        fps: 10, 
-        qrbox: { width: boxSize, height: boxSize },
-        aspectRatio: 1.0
-    };
+        const config = { 
+            fps: 10, 
+            qrbox: { width: boxSize, height: boxSize },
+            aspectRatio: 1.0
+        };
 
-        startButton.addEventListener('click', () => {
-            // Verifikasi secure context browser
+        const startScanner = () => {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 scanResultEl.innerHTML = `<span class="text-red-600">Error: Browser Anda memblokir kamera karena koneksi tidak aman.<br>Gunakan alamat <strong>http://127.0.0.1:8000</strong></span>`;
                 return;
             }
 
-            startButton.style.display = 'none';
-            scanResultEl.textContent = 'Mempersiapkan kamera...';
-
-            if (html5QrCode) {
-                html5QrCode.clear();
-            }
-            
-            // Inisialisasi menggunakan library html5-qrcode yang sudah dimuat
             html5QrCode = new Html5Qrcode("reader");
 
-            // Menggunakan facingMode otomatis untuk performa terbaik
             html5QrCode.start(
                 { facingMode: "environment" }, 
                 config,
                 qrCodeSuccessCallback,
-                (errorMessage) => {
-                    // Abaikan error pembacaan frame biasa
-                }
+                (errorMessage) => { }
             )
             .then(() => {
                 scanResultEl.textContent = 'Kamera aktif! Silakan arahkan ke QR Code.';
@@ -92,24 +80,23 @@
             })
             .catch(err => {
                 console.warn("Gagal menggunakan kamera belakang, mencoba webcam...", err);
-                
                 html5QrCode.start(
                     { facingMode: "user" }, 
                     config,
                     qrCodeSuccessCallback,
                     (errorMessage) => {}
-                )
-                .then(() => {
-                    scanResultEl.textContent = 'Kamera aktif (Webcam). Silakan arahkan ke QR Code.';
+                ).then(() => {
+                    scanResultEl.textContent = 'Webcam aktif! Silakan arahkan ke QR Code.';
                     scanResultEl.className = "mt-4 text-emerald-700 font-bold animate-pulse";
-                })
-                .catch(err2 => {
-                    console.error("Semua inisialisasi kamera gagal:", err2);
-                    scanResultEl.innerHTML = `<span class="text-red-600">Gagal menyalakan kamera.<br>Pastikan kamera tidak sedang digunakan aplikasi lain.</span>`;
-                    startButton.style.display = 'block';
+                }).catch(err2 => {
+                    scanResultEl.textContent = 'Gagal mengakses kamera.';
+                    scanResultEl.className = "mt-4 text-red-600 font-bold";
+                    console.error("Camera error:", err2);
                 });
             });
-        });
+        };
+
+        startScanner();
     });
 </script>
 @endsection

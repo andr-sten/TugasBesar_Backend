@@ -8,14 +8,14 @@ use App\Models\Layanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class FrontEndController extends Controller
+class DashboardController extends Controller
 {
     public function index()
     {
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
-        return view('auth.login-custom');
+        return view('landing');
     }
 
     public function dashboard(Request $request)
@@ -33,7 +33,25 @@ class FrontEndController extends Controller
                 ->latest()
                 ->take(5)
                 ->get();
-            return view('admin.dashboard', compact('stats', 'antrians'));
+            $jadwals = \App\Models\Jadwal::with('layanan')
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('jam_mulai', 'desc')
+                ->get();
+                
+            $antrianAktif = \App\Models\Antrian::where('user_id', $user->id)
+                ->whereIn('status', ['menunggu', 'dipanggil'])
+                ->with(['layanan', 'jadwal'])
+                ->first();
+                
+            $antrianDiDepan = 0;
+            if ($antrianAktif && $antrianAktif->status === 'menunggu') {
+                $antrianDiDepan = \App\Models\Antrian::where('jadwal_id', $antrianAktif->jadwal_id)
+                    ->where('nomor', '<', $antrianAktif->nomor)
+                    ->where('status', 'menunggu')
+                    ->count();
+            }
+                
+            return view('admin.dashboard', compact('stats', 'antrians', 'jadwals', 'antrianAktif', 'antrianDiDepan'));
         }
 
         // For Mahasiswa
@@ -50,12 +68,9 @@ class FrontEndController extends Controller
                 ->count();
         }
 
-        $jadwals = Layanan::whereHas('jadwal', function($query) {
-            $query->where('tanggal', '>=', now()->toDateString());
-        })->with(['jadwal' => function($query) {
-            $query->where('tanggal', '>=', now()->toDateString())
-                  ->orderBy('tanggal', 'asc')
-                  ->orderBy('jam_mulai', 'asc');
+        $jadwals = Layanan::with(['jadwal' => function($query) {
+            $query->orderBy('tanggal', 'desc')
+                  ->orderBy('jam_mulai', 'desc');
         }])->take(3)->get();
 
         $riwayats = Antrian::where('user_id', $user->id)
@@ -80,8 +95,7 @@ class FrontEndController extends Controller
     public function pilihLayanan()
     {
         $layanans = Layanan::with(['jadwal' => function($query) {
-            $query->where('tanggal', '>=', now()->toDateString())
-                  ->orderBy('tanggal', 'asc')
+            $query->orderBy('tanggal', 'asc')
                   ->orderBy('jam_mulai', 'asc');
         }])->get();
         return view('mahasiswa.pilih-layanan', compact('layanans'));
@@ -105,11 +119,21 @@ class FrontEndController extends Controller
 
     public function registerForm()
     {
-        return view('auth.register-custom');
+        return view('auth.register');
     }
 
     public function scanQr()
     {
         return view('mahasiswa.scan');
+    }
+
+    public function riwayat()
+    {
+        $riwayats = Antrian::where('user_id', Auth::id())
+            ->whereIn('status', ['selesai', 'batal'])
+            ->with(['layanan', 'jadwal'])
+            ->latest()
+            ->get();
+        return view('mahasiswa.riwayat', compact('riwayats'));
     }
 }

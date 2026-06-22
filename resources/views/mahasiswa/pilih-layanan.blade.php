@@ -1,4 +1,4 @@
-@extends('layouts.custom')
+@extends('layouts.template')
 
 @section('title', 'Pilih Layanan - Campus Queue')
 
@@ -10,12 +10,6 @@
             <h1 class="font-h1 text-h1 text-on-surface mb-2">Pilih Layanan</h1>
             <p class="text-on-surface-variant font-body-lg">Silakan pilih jenis layanan dan jadwal yang tersedia.</p>
         </header>
-
-        @if(session('error'))
-        <div class="mb-6 p-4 bg-error-container text-on-error-container rounded-xl font-bold border border-error/20">
-            {{ session('error') }}
-        </div>
-        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-card-gap">
             @foreach($layanans as $layanan)
