@@ -363,15 +363,36 @@
 
 <script>
     {{-- =============================================
-         NOTIFIKASI REAL-TIME
+         NOTIFIKASI REAL-TIME & SERVICE WORKER
          ============================================= --}}
     function showNotification(nomor, loket) {
         if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Panggilan Antrian!", {
+            const title = "Panggilan Antrian!";
+            const options = {
                 body: `Nomor A-${nomor} ke ${loket || 'Loket 1'}`,
                 icon: '/favicon.ico',
-                tag: 'antrian-panggilan'
-            });
+                tag: 'antrian-panggilan',
+                vibrate: [200, 100, 200, 100, 200, 100, 200],
+                requireInteraction: true,
+                actions: [
+                    {
+                        action: 'oke',
+                        title: 'Oke, Saya Menuju Kesana'
+                    }
+                ]
+            };
+
+            // Gunakan Service Worker jika ada untuk push notif di mobile (Android)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification(title, options);
+                }).catch(function() {
+                    // Fallback
+                    new Notification(title, options);
+                });
+            } else {
+                new Notification(title, options);
+            }
         }
         try {
             new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
@@ -379,6 +400,15 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Daftarkan Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registered:', registration.scope);
+            }).catch(function(error) {
+                console.error('ServiceWorker registration failed:', error);
+            });
+        }
+
         // Request Notification Permission on load
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
