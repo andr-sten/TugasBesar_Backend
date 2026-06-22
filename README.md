@@ -33,7 +33,9 @@ Saat pertama kali membuka website, pengguna disuguhkan dengan antarmuka dan anim
 </p>
 
 **💡 Logika Koding: GSAP, Grid Order & Controller Auth**
-Pada halaman (*landing page*) ini, ditampilkan visual seperti animasi pengetikan yang dikendalikan sepenuhnya oleh sebuah library animasi JavaScript **GSAP**. dan Untuk responsivitas, tata letak khusus pada mode mobile diatur lewat utilitas *Order* Grid CSS Tailwind. Setelah pengguna tertarik, proses masuk (Autentikasi) diamankan menggunakan sistem Eloquent & `Auth::attempt` murni bawaan Laravel.
+
+Pada halaman (*landing page*) ini, ditampilkan visual seperti animasi pengetikan yang dikendalikan sepenuhnya oleh sebuah library animasi JavaScript **GSAP**. dan Untuk responsivitas, tata letak khusus pada mode mobile diatur lewat utilitas *Order* Grid CSS Tailwind. 
+Adapun dari sisi *Controller*, ketika pengguna mendaftar, sandi akan diacak (*Hash*). Saat proses masuk (*Login*), fungsi `Auth::attempt` bekerja mengecek keberadaan NIM dan kecocokan *Password*. **Jika data cocok (user ada)**, sistem me-*regenerate session* demi keamanan dari *Session Fixation* lalu melempar pengguna ke halaman *Dashboard*.
 
 ```javascript
 // Frontend: Animasi GSAP Typing
@@ -59,7 +61,9 @@ Sistem mendukung fitur global **Dark Mode** secara utuh dan reaktif.
 </p>
 
 **💡 Logika Koding: Dark Mode State & Relasi Eloquent**
-Memasuki antarmuka *Dashboard* utama, transisi tema reaktif dikendalikan oleh **Alpine.js** yang tersinkronisasi langsung dengan *LocalStorage* peramban. Di balik layar (*Backend*), data antrian yang tampil diambil secara dinamis berdasarkan hari ini beserta relasi tabel layanannya menggunakan Eloquent ORM.
+
+Memasuki antarmuka *Dashboard* utama, transisi tema reaktif dikendalikan oleh **Alpine.js** yang tersinkronisasi langsung dengan *LocalStorage* peramban. 
+Di balik layar (*Backend Controller*), sistem mendeteksi hari saat ini (contoh: *Senin*). **Jika terdapat jadwal layanan yang terdaftar buka di hari Senin**, maka *query Database* akan menarik data jadwal tersebut sekalian menggabungkannya dengan info detail Layanan (*Eager Loading* `with('layanan')`) untuk dilemparkan ke UI Mahasiswa.
 
 ```html
 <!-- Frontend: Toggle Alpine.js tersinkronisasi dengan browser storage -->
@@ -83,7 +87,9 @@ Mahasiswa dapat melihat daftar layanan, lalu memindai QR Code dari kamera HP lan
 </p>
 
 **💡 Logika Koding: AJAX Post & Controller Insert Database**
-Untuk memfasilitasi pengambilan antrian secara fisik di lokasi, sistem memanfaatkan library `html5-qrcode` yang akan mengakses perangkat keras kamera. Begitu kode QR terdeteksi, algoritma backend akan otomatis menghitung (*generate*) nomor urut terbaru dan memasukkannya ke *Database* tanpa memuat ulang halaman (*Ajax Fetch*).
+
+Untuk memfasilitasi pengambilan antrian secara fisik di lokasi, sistem memanfaatkan library `html5-qrcode`. Begitu kode QR terdeteksi, *ID Layanan* dikirim secara asinkron (*Ajax*). 
+Di sisi *Controller*, sistem akan mencari nomor urut tertinggi pada jadwal tersebut. **Jika belum ada yang mengantri**, nomor diset ke 1. **Jika sudah ada**, nomor akan ditambah 1 dari urut terakhir (`$lastAntrian + 1`). Antrian pun direkam di *Database* dan status diset ke `menunggu`.
 
 ```javascript
 // Frontend: Ekstrak ID dari QR dan POST via Fetch
@@ -105,7 +111,7 @@ Antrian::create([
 ---
 
 ### 4. Fitur Real-Time Status & Push Notification (Service Worker)
-Ketika dipanggil, UI Mahasiswa otomatis menampilkan popup dan **Notifikasi Sistem Operasi** berbunyi (lengkap dengan aksi tombol).
+Ketika dipanggil, UI Mahasiswa otomatis menampilkan popup dan **Notifikasi Sistem Operasi** berbunyi (lengkap dengan tombol aksi).
 <p align="center">
   <img src="img/antriangeneratemodalmahasiswa.png" width="48%" />
   <img src="img/antriandipanggilmahasiswa.png" width="48%" />
@@ -115,7 +121,9 @@ Ketika dipanggil, UI Mahasiswa otomatis menampilkan popup dan **Notifikasi Siste
 </p>
 
 **💡 Logika Koding: Controller Query & Service Worker Action**
-Mekanisme *real-time* notifikasi ini mengandalkan teknik *Long-Polling* Javascript yang mengecek secara berkala ke Controller spesifik. Guna mengimplementasikan notifikasi ketat di perangkat *Mobile*, sistem mengeksekusi instruksi pembunyian dan pemunculan *pop-up* melalui celah arsitektur **Service Worker** di (`sw.js`).
+
+Mekanisme *real-time* notifikasi ini menerapkan teknik *Long-Polling* (permintaan AJAX berulang setiap 3 detik). 
+*Controller* bertugas mengecek Database: **"Apakah ada data antrian milik mahasiswa ini yang kolom statusnya telah diubah admin menjadi 'dipanggil'?"**. Jika iya, kembalikan respon positif. dan tampilkan respon tersebut,. Guna mengimplementasikan notifikasi ketat di perangkat *Mobile*, sistem mengeksekusi instruksi pembunyian dan pemunculan *pop-up* melalui celah arsitektur **Service Worker** di (`sw.js`).
 
 ```php
 // Backend Controller: Polling Check Status Antrian
@@ -147,7 +155,8 @@ Browser admin akan otomatis menjadi "speaker" pemanggil antrian.
 </p>
 
 **💡 Logika Koding: Update Database & ResponsiveVoice Synthesis**
-Pada pengelolaan sesi antrian di halaman ini, ketika Admin menekan tombol "Panggil", sistem menggeser status di basis data secara asinkronus. Kemudian, respon *JSON* yang dikembalikan akan langsung dikonversi menjadi *Text-to-Speech* (Teks ke suara) oleh *browser* admin yang bisa di maksimalkan menggunakan speaker fisik konvensional.
+
+Pada antarmuka loket, *Admin* menekan tombol "Panggil". *Controller* seketika mencari ID antrian tersebut di database. **Jika ID ditemukan**, nilai kolom status diperbarui (`update`) dari `menunggu` berubah jadi `dipanggil`. Data berupa Nomor dan Nama Loket ini dilemparkan kembali ke *browser*  Kemudian, respon *JSON* yang dikembalikan akan langsung dikonversi menjadi *Text-to-Speech* (Teks ke suara) oleh *browser* admin yang bisa di maksimalkan menggunakan speaker fisik konvensional.
 
 ```php
 // Backend Controller: Update Status menjadi Dipanggil
@@ -175,7 +184,9 @@ Setiap jadwal yang dibuat dapat dicetak menjadi sebuah QRCode untuk dipindai (*s
 </p>
 
 **💡 Logika Koding: CRUD Controller & QrCode Frontend**
-Sebagai lapisan manajemen master data, setiap *input* dilindungi ketat oleh standar validasi *Backend* Laravel. dalam proses pencetakan visual QR Code, sistem sepenuhnya mengandalkan Javascript di sisi pengguna (*Client-Side Rendering*) demi menjaga beban server (*Anti-Lag*).
+
+Sebagai lapis manajemen data krusial, *Controller* menahan paksa semua isian formulir. **Jika input nama layanan kosong atau data salah**, sistem secara otomatis menolak (*Validation Exception*) dan melempar *error* merah ke layar. **Jika valid**, data disimpan mutlak. dalam proses pencetakan visual QR Code, sistem menggunakan Javascript di sisi pengguna (*Client-Side Rendering*) demi menjaga beban server tetap ringan(*Anti-Lag*).
+
 
 ```php
 // Backend Controller: Standardisasi CRUD & Validasi
