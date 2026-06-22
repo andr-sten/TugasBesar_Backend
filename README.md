@@ -16,7 +16,7 @@ Sistem Informasi Manajemen Antrian berbasis Web App (PWA) yang modern, interakti
 
 **Hasil deploy website (vercel) :**  
 
-🌐 [Q-campus aplikasi antrian berbasis website](https://tugas-besar-backend.vercel.app/)
+🌐 [Campus-Q antrian berbasis website](https://tugas-besar-backend.vercel.app/)
 
 
 ## 🚀 Fitur, Alur Penggunaan, dan Logika Koding
