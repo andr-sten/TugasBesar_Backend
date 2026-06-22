@@ -206,7 +206,7 @@ document.getElementById('qr-container').innerHTML = qr.createImgTag(6);
 ---
 
 ## 🛠️ Tech Stack & Alat Lingkungan
-- **Backend Framework:** Laravel 11 (PHP 8.2), MySQL / Eloquent ORM
+- **Backend Framework:** Laravel 13 (PHP 8.3), MySQL / Eloquent ORM
 - **Frontend & CSS:** Tailwind CSS v3, Konsep *Glassmorphism* UI
 - **DOM Scripting / Modals:** Alpine.js (komunikasi Modals lintas *Views* memakai `x-data`)
 - **Animations:** GSAP (`Timeline` & `TextPlugin`)
