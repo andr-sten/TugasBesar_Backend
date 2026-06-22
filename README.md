@@ -16,15 +16,14 @@ Sistem Informasi Manajemen Antrian berbasis Web App (PWA) yang modern, interakti
 
 **Hasil deploy website (vercel) :**  
 
-🌐 [Campus-Q antrian berbasis website](https://tugas-besar-backend.vercel.app/)
-
+🌐 [Q-campus aplikasi antrian berbasis website](https://tugas-besar-backend.vercel.app/)
 
 ## 🚀 Fitur, Alur Penggunaan, dan Logika Koding
 
 Aplikasi ini memiliki 2 peran (*Role*) utama: **Mahasiswa** (pengguna layanan) dan **Admin** (pengelola layanan). Di bawah ini adalah alur penggunaan beserta penjelasan dan potongan logika (*snippet*) kodenya baik dari sisi *Frontend* maupun *Controller Backend/Database*.
 
-### 1. Landing Page & Autentikasi
-Menyambut pengguna dengan antarmuka dinamis dan *layout* yang adaptif, dilanjutkan dengan alur masuk/daftar.
+### 1. Halaman Landing Page & Autentikasi
+Saat pertama kali membuka website, pengguna disuguhkan dengan antarmuka dan animasi yang dinamis dengan *layout* yang adaptif pada landing page, dilanjutkan dengan alur masuk/daftar.
 <p align="center">
   <img src="img/landingpage.png" width="48%" />
   <img src="img/loginpage.png" width="48%" />
@@ -34,7 +33,7 @@ Menyambut pengguna dengan antarmuka dinamis dan *layout* yang adaptif, dilanjutk
 </p>
 
 **💡 Logika Koding: GSAP, Grid Order & Controller Auth**
-Animasi pengetikan ditangani GSAP. Tata letak HP diatur lewat *Order* Grid CSS. Pintu masuk akun menggunakan sistem Eloquent & `Auth::attempt` Laravel.
+Pada halaman (*landing page*) ini, ditampilkan visual seperti animasi pengetikan yang dikendalikan sepenuhnya oleh sebuah library animasi JavaScript **GSAP**. dan Untuk responsivitas, tata letak khusus pada mode mobile diatur lewat utilitas *Order* Grid CSS Tailwind. Setelah pengguna tertarik, proses masuk (Autentikasi) diamankan menggunakan sistem Eloquent & `Auth::attempt` murni bawaan Laravel.
 
 ```javascript
 // Frontend: Animasi GSAP Typing
@@ -52,7 +51,7 @@ if (Auth::attempt(['nim' => $request->nim, 'password' => $request->password])) {
 
 ---
 
-### 2. Dashboard Mahasiswa (PWA & Dark Mode)
+### 2. Halaman Dashboard Mahasiswa (PWA & Dark Mode)
 Sistem mendukung fitur global **Dark Mode** secara utuh dan reaktif.
 <p align="center">
   <img src="img/dashboardmahasiswa.png" width="48%" />
@@ -60,7 +59,7 @@ Sistem mendukung fitur global **Dark Mode** secara utuh dan reaktif.
 </p>
 
 **💡 Logika Koding: Dark Mode State & Relasi Eloquent**
-Peralihan tema dikendalikan Alpine.js dan *LocalStorage*. Di sisi Backend, data jadwal diambil berdasarkan hari saat ini beserta relasi tabel Layanannya.
+Memasuki antarmuka *Dashboard* utama, transisi tema reaktif dikendalikan oleh **Alpine.js** yang tersinkronisasi langsung dengan *LocalStorage* peramban. Di balik layar (*Backend*), data antrian yang tampil diambil secara dinamis berdasarkan hari ini beserta relasi tabel layanannya menggunakan Eloquent ORM.
 
 ```html
 <!-- Frontend: Toggle Alpine.js tersinkronisasi dengan browser storage -->
@@ -75,7 +74,7 @@ $jadwalHariIni = Jadwal::with('layanan')->where('hari', now()->locale('id')->day
 
 ---
 
-### 3. Pengambilan Antrian (Scan QR Code & Manual)
+### 3. Fitur Pengambilan Antrian (Scan QR Code & Manual)
 Mahasiswa dapat melihat daftar layanan, lalu memindai QR Code dari kamera HP langsung di *browser*.
 <p align="center">
   <img src="img/pindaiqrpagemahasiswa.png" width="32%" />
@@ -84,7 +83,7 @@ Mahasiswa dapat melihat daftar layanan, lalu memindai QR Code dari kamera HP lan
 </p>
 
 **💡 Logika Koding: AJAX Post & Controller Insert Database**
-Kamera dikontrol `html5-qrcode`. Jika QR terdeteksi, algoritma backend akan meracik nomor urut terbaru dan memasukkannya ke *Database*.
+Untuk memfasilitasi pengambilan antrian secara fisik di lokasi, sistem memanfaatkan library `html5-qrcode` yang akan mengakses perangkat keras kamera. Begitu kode QR terdeteksi, algoritma backend akan otomatis menghitung (*generate*) nomor urut terbaru dan memasukkannya ke *Database* tanpa memuat ulang halaman (*Ajax Fetch*).
 
 ```javascript
 // Frontend: Ekstrak ID dari QR dan POST via Fetch
@@ -105,7 +104,7 @@ Antrian::create([
 
 ---
 
-### 4. Real-Time Status & Push Notification (Service Worker)
+### 4. Fitur Real-Time Status & Push Notification (Service Worker)
 Ketika dipanggil, UI Mahasiswa otomatis menampilkan popup dan **Notifikasi Sistem Operasi** berbunyi (lengkap dengan aksi tombol).
 <p align="center">
   <img src="img/antriangeneratemodalmahasiswa.png" width="48%" />
@@ -116,10 +115,10 @@ Ketika dipanggil, UI Mahasiswa otomatis menampilkan popup dan **Notifikasi Siste
 </p>
 
 **💡 Logika Koding: Controller Query & Service Worker Action**
-Menggunakan *Long-Polling* Javascript ke Controller yang mencari data dengan spesifik status `dipanggil`.
+Mekanisme *real-time* notifikasi ini mengandalkan teknik *Long-Polling* Javascript yang mengecek secara berkala ke Controller spesifik. Guna mengimplementasikan notifikasi ketat di perangkat *Mobile*, sistem mengeksekusi instruksi pembunyian dan pemunculan *pop-up* melalui celah arsitektur **Service Worker** di (`sw.js`).
 
 ```php
-// Backend Controller: API Polling Check Status Antrian
+// Backend Controller: Polling Check Status Antrian
 return response()->json(
     Antrian::where('user_id', Auth::id())->where('status', 'dipanggil')->first()
 );
@@ -136,7 +135,7 @@ navigator.serviceWorker.ready.then(reg => {
 
 ---
 
-### 5. Manajemen Antrian Admin & Fitur Text-to-Speech
+### 5. Fitur Manajemen Antrian Admin & Text-to-Speech
 Browser admin akan otomatis menjadi "speaker" pemanggil antrian.
 <p align="center">
   <img src="img/manajemenantrianadmin.png" width="48%" />
@@ -148,7 +147,7 @@ Browser admin akan otomatis menjadi "speaker" pemanggil antrian.
 </p>
 
 **💡 Logika Koding: Update Database & ResponsiveVoice Synthesis**
-Admin mengklik "Panggil", Database berubah state, dan hasil *Response* langsung dibaca oleh sistem AI Audio browser.
+Pada pengelolaan sesi antrian di halaman ini, ketika Admin menekan tombol "Panggil", sistem menggeser status di basis data secara asinkronus. Kemudian, respon *JSON* yang dikembalikan akan langsung dikonversi menjadi *Text-to-Speech* (Teks ke suara) oleh *browser* admin yang bisa di maksimalkan menggunakan speaker fisik konvensional.
 
 ```php
 // Backend Controller: Update Status menjadi Dipanggil
@@ -163,7 +162,7 @@ responsiveVoice.speak(text, "Indonesian Female", { rate: 0.85, volume: 1 });
 
 ---
 
-### 6. Kelola Data & Generate QR Code (Admin)
+### 6. Fitur Kelola Data & Generate QR Code (Admin)
 Setiap jadwal yang dibuat dapat dicetak menjadi sebuah QRCode untuk dipindai (*scan*).
 <p align="center">
   <img src="img/kelolalayananadmin.png" width="32%" />
@@ -176,7 +175,7 @@ Setiap jadwal yang dibuat dapat dicetak menjadi sebuah QRCode untuk dipindai (*s
 </p>
 
 **💡 Logika Koding: CRUD Controller & QrCode Frontend**
-Master data dilindungi dengan validasi bawaan Laravel. Pembuatan QR Code murni dilakukan lewat Javascript Client-Side.
+Sebagai lapisan manajemen master data, setiap *input* dilindungi ketat oleh standar validasi *Backend* Laravel. dalam proses pencetakan visual QR Code, sistem sepenuhnya mengandalkan Javascript di sisi pengguna (*Client-Side Rendering*) demi menjaga beban server (*Anti-Lag*).
 
 ```php
 // Backend Controller: Standardisasi CRUD & Validasi
