@@ -14,6 +14,11 @@ Sistem Informasi Manajemen Antrian berbasis Web App (PWA) yang modern, interakti
 
 ---
 
+**Hasil deploy website (vercel) :**  
+
+🌐 [Q-campus aplikasi antrian berbasis website](https://tugas-besar-backend.vercel.app/)
+
+
 ## 🚀 Fitur, Alur Penggunaan, dan Logika Koding
 
 Aplikasi ini memiliki 2 peran (*Role*) utama: **Mahasiswa** (pengguna layanan) dan **Admin** (pengelola layanan). Di bawah ini adalah alur penggunaan beserta penjelasan dan potongan logika (*snippet*) kodenya baik dari sisi *Frontend* maupun *Controller Backend/Database*.
